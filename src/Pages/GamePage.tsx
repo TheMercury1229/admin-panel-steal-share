@@ -54,6 +54,9 @@ export default function GamePage() {
   >(null);
   const [games, setGames] = useState<string[]>([]); // Example state for games
   const [topScorer, setTopScorer] = useState<string | null>(null);
+  const [numberOfPlayers, setNumberOfPlayers] = useState<number>(10); // Add state to input the number of players
+  const [spreadsheetData, setSpreadsheetData] = useState(null);
+
 
   // Mock API calls
 
@@ -112,14 +115,18 @@ export default function GamePage() {
       setSelectedDeactivateGame(null);
     }
   };
-
+  // Function to fetch spreadsheet
   const fetchSpreadsheet = async () => {
     setFetchingSpreadsheet(true);
     setMessage("");
-
+  
     try {
-      // Simulate fetching spreadsheet
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch("/api/spreadsheet");
+      if (!response.ok) {
+        throw new Error("Failed to fetch spreadsheet");
+      }
+      const data = await response.json();
+      setSpreadsheetData(data.Response); // Add this line to store fetched data
       setMessage("Spreadsheet fetched successfully!");
     } catch (error: any) {
       setMessage(`Error fetching spreadsheet: ${error.message}`);
@@ -127,6 +134,8 @@ export default function GamePage() {
       setFetchingSpreadsheet(false);
     }
   };
+  
+  
 
   const exportSpreadsheet = async () => {
     setExportingSpreadsheet(true);
@@ -142,11 +151,10 @@ export default function GamePage() {
       setExportingSpreadsheet(false);
     }
   };
-
+  
   const getTopScorer = async () => {
     setGettingTopScorer(true);
     setMessage("");
-
     try {
       // Simulate fetching top scorer
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -160,6 +168,30 @@ export default function GamePage() {
     }
   };
 
+
+  // Function to filter players
+  const filterPlayers = async () => {
+    setMessage("");
+    try {
+      const response = await fetch("/api/filter-players", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ number: numberOfPlayers }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to filter players");
+      }
+
+      const data = await response.text();
+      setMessage(data);
+    } catch (error: any) {
+      setMessage(`Error filtering players: ${error.message}`);
+    }
+  };
+
   return (
     <section className="py-8 px-6 bg-white text-black min-h-screen">
       <h2 className="text-3xl font-bold mb-6">Game Management</h2>
@@ -169,7 +201,6 @@ export default function GamePage() {
           {message}
         </div>
       )}
-
       <div className="flex  items-start gap-6">
         {/* Create a Game */}
         <Card className="w-full shadow-md">
@@ -368,6 +399,26 @@ export default function GamePage() {
             </Dialog>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Input field for filtering players */}
+      <div className="mb-6">
+        <label htmlFor="numberOfPlayers" className="block mb-2 font-bold">
+          Number of Top Players to Keep:
+        </label>
+        <input
+          type="number"
+          id="numberOfPlayers"
+          value={numberOfPlayers}
+          onChange={(e) => setNumberOfPlayers(Number(e.target.value))}
+          className="border border-gray-300 p-2 rounded"
+        />
+        <Button
+          onClick={filterPlayers}
+          className="bg-black text-white flex items-center mt-4"
+        >
+          Filter Players
+        </Button>
       </div>
 
       {/* Additional Functionalities */}
