@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type Player = {
   id: number;
@@ -7,40 +7,55 @@ type Player = {
   status: 'Active' | 'Inactive';
 };
 
-const playersData: Player[] = [
-  { id: 1, name: 'Alice', points: 1200, status: 'Active' },
-  { id: 2, name: 'Bob', points: 800, status: 'Inactive' },
-  { id: 3, name: 'Charlie', points: 1500, status: 'Active' },
-  { id: 4, name: 'David', points: 1000, status: 'Active' },
-  { id: 5, name: 'Eve', points: 1300, status: 'Inactive' },
-  { id: 6, name: 'Frank', points: 950, status: 'Active' },
-  { id: 7, name: 'Grace', points: 1450, status: 'Active' },
-  { id: 8, name: 'Hank', points: 1100, status: 'Inactive' },
-  { id: 9, name: 'Ivy', points: 1600, status: 'Active' },
-  { id: 10, name: 'Jack', points: 750, status: 'Active' }
-];
-
 const DataTable = () => {
-  const [filterID, setFilterID] = useState('');
+  const [players, setPlayers] = useState<Player[]>([]);
+  
+  const [loading, setLoading] = useState(true);
+  const [sorted, setSorted] = useState(false);
 
-  const sortedPlayers = playersData
-    .filter((player) => player.id.toString().includes(filterID))
-    .sort((a, b) => b.points - a.points);
+  // Fetch data from the API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/'); // Replace with your API URL
+        const data: Player[] = await response.json();
+        setPlayers(data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Sort function to be called on button click
+  const handleSort = () => {
+    setPlayers((prevPlayers) =>
+      [...prevPlayers].sort((a, b) => b.points - a.points)
+    );
+    setSorted(true);
+  };
+
+  // Filter players based on ID
+  
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto p-4">
-      <div className="mb-4">
-        <label htmlFor="filterID" className="block text-gray-700 font-medium">
-          Filter by ID:
-        </label>
-        <input
-          id="filterID"
-          type="text"
-          value={filterID}
-          onChange={(e) => setFilterID(e.target.value)}
-          className="px-2 py-1 border rounded w-full"
-        />
-      </div>
+
+
+      <button
+        onClick={handleSort}
+        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded"
+        disabled={sorted}
+      >
+        {sorted ? 'Sorted by Points' : 'Sort by Points'}
+      </button>
 
       <table className="min-w-full bg-gray-50 border border-gray-300 shadow-md">
         <thead className="bg-gray-200 text-gray-700">
@@ -52,7 +67,7 @@ const DataTable = () => {
           </tr>
         </thead>
         <tbody>
-          {sortedPlayers.map((player, index) => (
+          {players.map((player, index) => (
             <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 border-t border-gray-300 text-gray-700">{player.id}</td>
               <td className="px-4 py-3 border-t border-gray-300 text-gray-700">{player.name}</td>
@@ -65,5 +80,9 @@ const DataTable = () => {
     </div>
   );
 };
+
+export default DataTable;
+
+export default DataTable;
 
 export default DataTable;
