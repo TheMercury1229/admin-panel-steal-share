@@ -57,7 +57,6 @@ export default function GamePage() {
   const [numberOfPlayers, setNumberOfPlayers] = useState<number>(10); // Add state to input the number of players
   const [spreadsheetData, setSpreadsheetData] = useState(null);
 
-
   // Mock API calls
 
   const handleCreateGame = async () => {
@@ -65,9 +64,19 @@ export default function GamePage() {
     setMessage("");
 
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const newGameId = `GAME-${Math.floor(Math.random() * 10000)}`;
+      const response = await fetch("/admin/create-game", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create game");
+      }
+
+      const data = await response.json();
+      const newGameId = data.gameId; // Assuming backend sends new game ID
       setGames((prevGames) => [...prevGames, newGameId]);
       setMessage(`Game created successfully! Game ID: ${newGameId}`);
     } catch (error: any) {
@@ -83,8 +92,14 @@ export default function GamePage() {
     setMessage("");
 
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch(`/api/start-game/${selectedStartGame}`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to start game");
+      }
+
       setMessage(`Game started successfully! Game ID: ${selectedStartGame}`);
     } catch (error: any) {
       setMessage(`Error starting game: ${error.message}`);
@@ -100,8 +115,17 @@ export default function GamePage() {
     setMessage("");
 
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch(
+        `/api/deactivate-game/${selectedDeactivateGame}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to deactivate game");
+      }
+
       setGames((prevGames) =>
         prevGames.filter((game) => game !== selectedDeactivateGame)
       );
@@ -115,13 +139,14 @@ export default function GamePage() {
       setSelectedDeactivateGame(null);
     }
   };
+
   // Function to fetch spreadsheet
   const fetchSpreadsheet = async () => {
     setFetchingSpreadsheet(true);
     setMessage("");
-  
+
     try {
-      const response = await fetch("/api/spreadsheet");
+      const response = await fetch("/admin/fetch-google-spreadsheet");
       if (!response.ok) {
         throw new Error("Failed to fetch spreadsheet");
       }
@@ -134,8 +159,6 @@ export default function GamePage() {
       setFetchingSpreadsheet(false);
     }
   };
-  
-  
 
   const exportSpreadsheet = async () => {
     setExportingSpreadsheet(true);
@@ -151,7 +174,7 @@ export default function GamePage() {
       setExportingSpreadsheet(false);
     }
   };
-  
+
   const getTopScorer = async () => {
     setGettingTopScorer(true);
     setMessage("");
@@ -167,7 +190,6 @@ export default function GamePage() {
       setGettingTopScorer(false);
     }
   };
-
 
   // Function to filter players
   const filterPlayers = async () => {
